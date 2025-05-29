@@ -6,18 +6,40 @@ from io import BytesIO
 import httpx
 import asyncio
 
-# Настройки
+# Настройки страницы
 st.set_page_config(page_title="DeepSeek Coder", layout="wide")
-pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"  # Путь в Streamlit Cloud
+
+# Подключение tesseract
+pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"  # Для Streamlit Cloud
+
+# Кастомный стиль для тёмной темы (неофициальный способ)
+st.markdown("""
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .stChatMessage {
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .stTextInput, .stTextArea, .stButton {
+            background-color: #333333;
+            color: white;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Инициализация истории чата
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Функции обработки файлов
+# Функции извлечения текста
 def extract_text_from_pdf(file):
     pdf_reader = PyPDF2.PdfReader(file)
-    text = "\n".join([page.extract_text() for page in pdf_reader.pages])
+    text = "\n".join([page.extract_text() for page in pdf_reader.pages if page.extract_text()])
     return text
 
 def extract_text_from_image(file):
@@ -25,12 +47,18 @@ def extract_text_from_image(file):
     text = pytesseract.image_to_string(image, lang="eng+rus")
     return text
 
-# Интерфейс
+# Заголовок
 st.title("🤖 DeepSeek Coding Agent")
 
-# Загрузка файлов
+# Боковая панель — история чата
+st.sidebar.header("📜 История")
+for i, msg in enumerate(st.session_state.messages):
+    role = "👤 Пользователь" if msg["role"] == "user" else "🤖 DeepSeek"
+    st.sidebar.markdown(f"**{role}:** {msg['content'][:100]}{'...' if len(msg['content']) > 100 else ''}")
+
+# Загрузка файла
 uploaded_file = st.file_uploader(
-    "Загрузите PDF/изображение с кодом",
+    "Загрузите PDF или изображение с кодом:",
     type=["pdf", "png", "jpg", "jpeg"]
 )
 
@@ -47,17 +75,17 @@ if uploaded_file:
         
         st.session_state.messages.append({
             "role": "user", 
-            "content": f"Файл '{uploaded_file.name}':\n{text}"
+            "content": f"📎 Файл '{uploaded_file.name}':\n{text}"
         })
     except Exception as e:
-        st.error(f"Ошибка: {e}")
+        st.error(f"Ошибка при обработке файла: {e}")
 
-# Отображение истории
+# Отображение сообщений в основной части
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# Чат с DeepSeek API
+# Асинхронный вызов API
 async def get_deepseek_response(prompt):
     try:
         async with httpx.AsyncClient() as client:
@@ -76,14 +104,12 @@ async def get_deepseek_response(prompt):
             )
             return response.json()["choices"][0]["message"]["content"]
     except Exception as e:
-        return f"Ошибка API: {e}"
+        return f"❌ Ошибка API: {e}"
 
-if prompt := st.chat_input("Ваш запрос..."):
+# Ввод запроса
+if prompt := st.chat_input("Введите ваш запрос..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    
-    # Асинхронный вызов API
     response = asyncio.run(get_deepseek_response(prompt))
-    
     st.session_state.messages.append({"role": "assistant", "content": response})
     with st.chat_message("assistant"):
         st.markdown(response)
