@@ -17,7 +17,7 @@ st.markdown("""
     <style>
         body {
             background-color: #1e1e1e;
-            color: #ffffff;
+            color: #000000;
         }
         .stChatMessage {
             background-color: #2c2c2c;
@@ -27,7 +27,7 @@ st.markdown("""
         }
         .stTextInput, .stTextArea, .stButton {
             background-color: #333333;
-            color: white;
+            color: black;
         }
     </style>
 """, unsafe_allow_html=True)
