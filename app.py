@@ -54,7 +54,8 @@ st.title("🤖 DeepSeek Coding Agent")
 st.sidebar.header("📜 История")
 for i, msg in enumerate(st.session_state.messages):
     role = "👤 Пользователь" if msg["role"] == "user" else "🤖 DeepSeek"
-    st.sidebar.markdown(f"**{role}:** {msg['content'][:100]}{'...' if len(msg['content']) > 100 else ''}")
+    with st.sidebar.expander(f"{role} №{i+1}", expanded=False):
+        st.markdown(msg["content"])
 
 # Загрузка файла
 uploaded_file = st.file_uploader(
