@@ -10,7 +10,7 @@ import asyncio
 st.set_page_config(page_title="DeepSeek Coder", layout="wide")
 
 # Подключение tesseract
-pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"  # Для Streamlit Cloud
+#pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"  # Для Streamlit Cloud
 
 # Кастомный стиль для тёмной темы (неофициальный способ)
 st.markdown("""
